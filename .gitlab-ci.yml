@@ -1,0 +1,101 @@
+stages:
+  - deploy
+  - monitoring
+
+variables:
+  WAIT_TIMEOUT: "3000"
+
+before_script:
+  - set -euxo pipefail
+  - export CLUSTER_ID=$(yc managed-kubernetes cluster get --name otus-project --format json | jq -r '.id')
+  - echo "$CLUSTER_ID"
+  - yc managed-kubernetes cluster get-credentials "${CLUSTER_ID}" --external --force
+
+
+deploy_payload:
+  stage: deploy
+  when: manual
+  script:
+    - |
+      wait_for_pods() {
+        ns="$1"
+        timeout="${WAIT_TIMEOUT}s"
+        echo "Waiting for all pods in namespace '$ns' to be Ready (timeout=${timeout})..."
+        if kubectl get pods -n "$ns" --no-headers 1>/dev/null 2>&1; then
+          kubectl wait --for=condition=Ready pod --all -n "$ns" --timeout="$timeout" || {
+            echo "Timeout or error while waiting. Showing pod status:"
+            kubectl get pods -n "$ns" -o wide
+            return 1
+          }
+        else
+          echo "No pods found in namespace $ns yet."
+        fi
+      }
+    - echo "Check ingress"
+    - helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    - helm repo update
+    - helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace -f ./ingress/ingress-nginx-values.yaml
+    - echo "Create namespace and apply manifests"
+    - kubectl create namespace payload --dry-run=client -o yaml | kubectl apply -f -
+    - kubectl apply -f ./microservices-demo/release/kubernetes-manifests.yaml -n payload
+    - echo "Initial pods list:"
+    - kubectl get pods -n payload || true
+    - echo "Wait for pods (kubectl wait) with timeout ${WAIT_TIMEOUT}s"
+    - wait_for_pods payload || (echo "Pods did not become ready in time; collecting debug info..." && kubectl describe pods -n payload && kubectl logs -n payload --all-containers --limit-bytes=50000 --tail=20 --selector='' || true) 
+    - echo "Final pods list:"
+    - kubectl get pods -n payload
+    - echo "Applying new ingress manifest"
+    - kubectl apply -f ./ingress/frontend.yaml
+    - sleep 30
+    - echo "Ingress frontend:"
+    - kubectl get ingress -n payload
+  only:
+    - main
+
+deploy_monitoring:
+  stage: monitoring
+  when: manual
+  script:
+    - |
+      wait_for_pods() {
+        ns="$1"
+        timeout="${WAIT_TIMEOUT}s"
+        echo "Waiting for all pods in namespace '$ns' to be Ready (timeout=${timeout})..."
+        if kubectl get pods -n "$ns" --no-headers 1>/dev/null 2>&1; then
+          kubectl wait --for=condition=Ready pod --all -n "$ns" --timeout="$timeout" || {
+            echo "Timeout or error while waiting. Showing pod status:"
+            kubectl get pods -n "$ns" -o wide
+            return 1
+          }
+        else
+          echo "No pods found in namespace $ns yet."
+        fi
+      }
+    - echo "Checkong ingress"
+    - helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    - helm repo update
+    - helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace -f ./ingress/ingress-nginx-values.yaml
+    - echo "Create namespace and apply manifests"
+    - echo "Adding/Updating Helm repo"
+    - helm repo add grafana https://grafana.github.io/helm-charts || true
+    - helm repo update
+    - echo "Install/upgrade loki"
+    - helm upgrade --install loki grafana/loki -n infra --create-namespace -f ./logging-monitoring/loki-values.yaml
+    - echo "Install/upgrade promtail"
+    - helm upgrade --install promtail grafana/promtail -n infra -f ./logging-monitoring/promtail-values.yaml
+    - echo "Install/upgrade prometheus"
+    - helm upgrade --install prometheus oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack -n infra -f prometheus-values.yaml
+    - echo "Install/upgrade grafana"
+    - helm upgrade --install grafana grafana/grafana -n infra -f ./logging-monitoring/grafana-values.yaml
+    - echo "Wait grafana pods"
+    - wait_for_pods infra
+    - echo "Grafana admin password:"
+    - kubectl get secret --namespace infra grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+    - echo "Applying new ingress manifest"
+    - kubectl apply -f ./ingress/grafana-ingress.yaml
+    - sleep 30
+    - echo "Ingress grafana:"
+    - kubectl get ingress -n infra
+  only:
+    - main
+

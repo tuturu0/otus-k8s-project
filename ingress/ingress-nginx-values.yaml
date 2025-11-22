@@ -1,0 +1,33 @@
+controller:
+  replicaCount: 2
+
+  nodeSelector:
+    node-role: infra
+
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "infra"
+      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+
+defaultBackend:
+  enabled: false
+
