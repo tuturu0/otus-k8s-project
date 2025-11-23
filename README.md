@@ -11,7 +11,7 @@
 - Google Online Boutique http://158.160.173.116/
 - Grafana, Loki, Prometheus, Алертинг http://158.160.173.116/grafana
 
-# Для создания кластера k8s в YC необходимо запустить bash-скрип `cluster.sh`, заполнив переменные в нём:
+# Для создания кластера k8s в YC необходимо запустить bash-скрипт `cluster.sh`, заполнив переменные в нём:
 ```bash
 bash cluster.sh
 ```
