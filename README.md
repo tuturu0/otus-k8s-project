@@ -18,38 +18,38 @@ bash cluster.sh
 
 # Для деплоя микросервисов Google Online Boutique необходимо склонировать данный репозиторий в Gitlab и запустить джобу `deploy_payload` в пайплайне:
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/1.png)
-В конце успешного выполнения джобы можно будет увидеть адресс ингресса `http://158.160.173.116/`, по которому можно будет перейти и проверить рабоспособность сервиса
+- В конце успешного выполнения джобы можно будет увидеть адресс ингресса `http://158.160.173.116/`, по которому можно будет перейти и проверить рабоспособность сервиса
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/2.png)
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/3.png)
 
 # Для логирования используются Loki, Promtail и Grafana. Доступ к Grafana находится по адрессу `http://158.160.173.116/grafana`:
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/4.png)
 <br></br>
-Как можно увидеть из скриншота ниже, Loki благополучно собирает логи
+- Как можно увидеть из скриншота ниже, Loki благополучно собирает логи
 <br></br>
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/5.png)
 <br></br>
-Даные Loki хранятся в YC-s3
+- Даные Loki хранятся в YC-s3
 <br></br>
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/12.png)
 
 # Для сбора метрик используется Prometheus, который подключен к Grafana:
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/6.png)
 <br></br>
-Также в данном репозитории лежит дашборд `logging-monitoring/dashboard.json`, который можно импортировать в Grafana <br>
-На `http://158.160.173.116/grafana` данный дашборд уже импортирован
+- Также в данном репозитории лежит дашборд `logging-monitoring/dashboard.json`, который можно импортировать в Grafana
+- На `http://158.160.173.116/grafana` данный дашборд уже импортирован
 <br></br>
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/7.png)
 
 # Для алертинга используются встроенные средства Grafana:
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/8.png)
 <br></br>
-Contact points и политика настроны на отправку алертов в telegram-бота
+- Contact points и политика настроны на отправку алертов в telegram-бота
 <br></br>
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/9.png)
 
 # Для деплоя описанных выше средств логирования и мониторинга в пайплайне описана джоба `deploy_monitoring`:
-Перед её запуском необходимо указать всои значения ключей и доменных имён/адресов в `values`
+- Перед её запуском необходимо указать всои значения ключей и доменных имён/адресов в `values`
 <br></br>
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/10.png)
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/11.png)
