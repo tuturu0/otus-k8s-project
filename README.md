@@ -29,7 +29,7 @@ bash cluster.sh
 Даные Loki хранятся в YC-s3
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/12.png)
 
-# Для сбора метрик используется Prometheus, который так же подключен к Grafana:
+# Для сбора метрик используется Prometheus, который подключен к Grafana:
 ![alt text](https://github.com/tuturu0/otus-k8s-project/blob/main/images/6.png)
 Также в данном репозитории лежит дашборд `logging-monitoring/dashboard.json`, который можно импортировать в Grafana <br>
 На `http://158.160.173.116/grafana` данный дашборд уже импортирован
